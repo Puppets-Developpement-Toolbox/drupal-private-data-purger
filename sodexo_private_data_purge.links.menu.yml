@@ -1,0 +1,5 @@
+sodexo_private_data_purge.settings:
+  title: Salesforce
+  route_name: sodexo_private_data_purge.settings
+  weight: 10
+  parent: system.admin_config

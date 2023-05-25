@@ -1,0 +1,4 @@
+sodexo_private_data_purge.settings:
+  path: '/admin/sodexo/private_data_purge/settings'
+  requirements:
+    _permission: 'administer site configuration'
