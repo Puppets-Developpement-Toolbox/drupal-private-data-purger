@@ -1,0 +1,5 @@
+private_data_purger.settings:
+  title: Salesforce
+  route_name: private_data_purger.settings
+  weight: 10
+  parent: system.admin_config
