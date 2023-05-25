@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\sodexo_private_data_purge;
+namespace Drupal\private_data_purger;
 
 use Entity;
 
@@ -15,7 +15,7 @@ class DataPurger
    */
   public function purgeSomeEntity($arg)
   {
-    $config = \Drupal::config('sodexo_private_data_purge.settings');
+    $config = \Drupal::config('private_data_purger.settings');
     foreach ($config->get()['entities'] as $entity => $filter) {
       $ageToKeep = $config->get('entities.'.$entity.'.created');
       $result = \Drupal::entityQuery("newsletter_e_mail_entity")

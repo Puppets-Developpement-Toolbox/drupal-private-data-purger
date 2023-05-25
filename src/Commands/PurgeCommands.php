@@ -1,10 +1,10 @@
 <?php
 
-namespace Drupal\sodexo_private_data_purge\Commands;
+namespace Drupal\private_data_purger\Commands;
 
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
 use Drush\Commands\DrushCommands;
-use Drupal\sodexo_private_data_purge\DataPurger;
+use Drupal\private_data_purger\DataPurger;
 
 
 /**
@@ -29,7 +29,7 @@ class PurgeCommands extends DrushCommands
    * Command description here.
    *   Description
    *
-   * @command sodexo_private_data_purge:simple
+   * @command private_data_purger:simple
    * @aliases simple-newsletter-purge
    */
   public function callDataPurge($arg = "wet-run")

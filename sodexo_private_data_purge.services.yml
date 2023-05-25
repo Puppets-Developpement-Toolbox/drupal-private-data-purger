@@ -1,8 +1,0 @@
-services:
-  sodexo_private_data_purge.data_purger:
-    class: Drupal\sodexo_private_data_purge\DataPurger
-  sodexo_private_data_purge.commands:
-    class: \Drupal\sodexo_private_data_purge\Commands\PurgeCommands
-    tags:
-      - { name: drush.command }
-    arguments : ['@sodexo_private_data_purge.data_purger']
