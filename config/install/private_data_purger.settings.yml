@@ -4,7 +4,11 @@ entities:
 #    created: "1 year"
 #    entity_type: "classic_entity"
   ##Batobus
-  contact:
+  #contact:
+  #  created: "1 year"
+  #  entity_type: "webform_submission"
+
+  galaxy_orders:
     created: "1 year"
-    entity_type: "webform_submission"
+    entity_type: "sql_entity"
     

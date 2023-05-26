@@ -2,12 +2,6 @@
 
 namespace Drupal\private_data_purger;
 
-use Entity;
-//use Drupal Webform encrypt namespace
-use Drupal\webform_encrypt\EncryptService;
-
-
-
 /**
  * DataPurger service.
  */
@@ -22,7 +16,7 @@ class DataPurger
 
   public function purgeSomeEntity($arg)
   {
-    
+
     $config = \Drupal::config('private_data_purger.settings');
     if (!empty($config->get()['entities'])) {
       foreach ($config->get()['entities'] as $entity => $value) {
@@ -31,23 +25,24 @@ class DataPurger
         $availableEntities = \Drupal::entityTypeManager()->getDefinitions();
         //check if $entity its type is a key of $availableEntities 
         $entity_type = $config->get('entities.' . $entity . '.entity_type');
-        if (!array_key_exists($entity, $availableEntities) && !array_key_exists($entity_type, $availableEntities) ) {
-          echo ('Entity ' . $entity . ' of type '.$entity_type.' does not exist.');
+        if (!array_key_exists($entity, $availableEntities) && !array_key_exists($entity_type, $availableEntities)) {
+          echo ('Entity ' . $entity . ' of type ' . $entity_type . ' does not exist.');
           break;
         }
         // use the resolveNids function to get the nids of the entities to be deleted
         $nids = $this->resolveNids($entity, $entity_type);
         $storage_handler = \Drupal::entityTypeManager()->getStorage("webform_submission");
-        dump(count($nids).' records will be deleted. ');
-        foreach ($nids as $nid) {
-          /** @var Drupal\node\Entity $node */
-          $node = $storage_handler->load($nid);
-          // Drupal get node's creation date formatted to dd/mm/yyyy
-          $date = \Drupal::service('date.formatter')->format($node->getCreatedTime(), 'custom', 'd/m/Y');
-          dump('Node of type ' . $entity . ' with id ' . $nid . ' created on ' . $date . ' will be deleted.');
-          //$node->getCreatedTime();
-          //count the number of $nids
-          if ($arg == "wet-run") {
+        dump(count($nids) . ' records will be deleted. ');
+        if ($arg === "wet-run") {
+          foreach ($nids as $nid) {
+            /** @var Drupal\node\Entity $node */
+            $node = $storage_handler->load($nid);
+            // Drupal get node's creation date formatted to dd/mm/yyyy
+            $date = \Drupal::service('date.formatter')->format($node->getCreatedTime(), 'custom', 'd/m/Y');
+            dump('Node of type ' . $entity . ' with id ' . $nid . ' created on ' . $date . ' will be deleted.');
+            //$node->getCreatedTime();
+            //count the number of $nids
+
             $storage_handler->delete([$node]);
           }
         }
@@ -77,6 +72,18 @@ class DataPurger
           ->condition("created", strtotime('- ' . $ageToKeep), "<")
           ->accessCheck(FALSE)
           ->execute();
+        break;
+      case 'sql_entity':
+        // declare a connection variable typed as database service
+        /** @var use Drupal\Core\Database\Connection $node */
+        $connection = \Drupal::service('database');
+        $query = $connection->select('galaxy_orders', 'go')
+          ->fields(
+            'go',
+            ['id']
+          )
+          ->execute()->fetchAll();
+        dump($query);
         break;
     }
 
