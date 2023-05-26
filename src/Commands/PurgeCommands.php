@@ -30,9 +30,8 @@ class PurgeCommands extends DrushCommands
    *   Description
    *
    * @command private_data_purger:simple
-   * @aliases simple-newsletter-purge
    */
-  public function callDataPurge($arg = "wet-run")
+  public function callDataPurge($arg = "dry-run")
   {
     $this->dataPurger->purgeSomeEntity($arg);
   }

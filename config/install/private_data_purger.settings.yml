@@ -1,5 +1,10 @@
 entities:
   ##Prestige
-  newsletter_e_mail_entity:
+#  newsletter_e_mail_entity:
+#    created: "1 year"
+#    entity_type: "classic_entity"
+  ##Batobus
+  contact:
     created: "1 year"
+    entity_type: "webform"
     
