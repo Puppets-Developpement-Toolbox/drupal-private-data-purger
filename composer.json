@@ -1,5 +1,5 @@
 {
-    "name": "drupal/private-data-purger",
+    "name": "drupal/private_data_purger",
     "description": "Will purge data according to a simple conf",
     "type": "drupal-module",
     "license": "private",
