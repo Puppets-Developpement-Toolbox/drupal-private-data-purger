@@ -6,5 +6,5 @@ entities:
   ##Batobus
   contact:
     created: "1 year"
-    entity_type: "webform"
+    entity_type: "webform_submission"
     

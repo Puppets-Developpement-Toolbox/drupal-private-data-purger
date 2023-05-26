@@ -22,6 +22,7 @@ class DataPurger
 
   public function purgeSomeEntity($arg)
   {
+    
     $config = \Drupal::config('private_data_purger.settings');
     if (!empty($config->get()['entities'])) {
       foreach ($config->get()['entities'] as $entity => $value) {
@@ -31,23 +32,21 @@ class DataPurger
         //check if $entity its type is a key of $availableEntities 
         $entity_type = $config->get('entities.' . $entity . '.entity_type');
         if (!array_key_exists($entity, $availableEntities) && !array_key_exists($entity_type, $availableEntities) ) {
-          echo ('Entity ' . $entity . ' does not exist.');
+          echo ('Entity ' . $entity . ' of type '.$entity_type.' does not exist.');
           break;
         }
-
-        $ageToKeep = $config->get('entities.' . $entity . '.created');
         // use the resolveNids function to get the nids of the entities to be deleted
         $nids = $this->resolveNids($entity, $entity_type);
-        dump('random');
-
-        $storage_handler = \Drupal::entityTypeManager()->getStorage($entity);
+        $storage_handler = \Drupal::entityTypeManager()->getStorage("webform_submission");
+        dump(count($nids).' records will be deleted. ');
         foreach ($nids as $nid) {
           /** @var Drupal\node\Entity $node */
           $node = $storage_handler->load($nid);
           // Drupal get node's creation date formatted to dd/mm/yyyy
           $date = \Drupal::service('date.formatter')->format($node->getCreatedTime(), 'custom', 'd/m/Y');
-          echo ('Node of type ' . $entity . ' with id ' . $nid . ' created on ' . $date . ' will be deleted.');
+          dump('Node of type ' . $entity . ' with id ' . $nid . ' created on ' . $date . ' will be deleted.');
           //$node->getCreatedTime();
+          //count the number of $nids
           if ($arg == "wet-run") {
             $storage_handler->delete([$node]);
           }
@@ -63,26 +62,24 @@ class DataPurger
     $config = \Drupal::config('private_data_purger.settings');
     $ageToKeep = $config->get('entities.' . $entity . '.created');
     switch ($entity_type) {
-      case 'webform':
-        dump($entity);
+      case 'webform_submission':
         $webform  = \Drupal\webform\Entity\Webform::load('contact');;
         if ($webform->hasSubmissions()) {
           $result = \Drupal::entityQuery('webform_submission')
+            ->condition("created", strtotime('- ' . $ageToKeep), "<")
             ->condition('webform_id', $entity)
-            ->condition("created", strtotime('- ' . $ageToKeep . ' days'), "<")
             ->accessCheck(FALSE)
             ->execute();
-          dump($result);
         }
-        
         break;
       case 'classic_entity':
         $result = \Drupal::entityQuery($entity)
-          ->condition("created", strtotime('- ' . $ageToKeep . ' days'), "<")
+          ->condition("created", strtotime('- ' . $ageToKeep), "<")
           ->accessCheck(FALSE)
           ->execute();
         break;
-        return $result;
     }
+
+    return $result;
   }
 }
