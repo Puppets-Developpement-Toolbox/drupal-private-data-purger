@@ -33,7 +33,7 @@ class DataPurger
         $nids = $this->resolveNids($entity, $entity_type);
 
 
-        dump(count($nids) . ' records of' . $entity . '  will be deleted. ');
+        dump(count($nids) . ' records of ' . $entity . '  will be deleted. ');
         if ($arg === "wet-run") {
           foreach ($nids as $nid) {
             if (!$entity_type === 'sql_entity') {
@@ -103,6 +103,7 @@ class DataPurger
 
         // array from id key of $query
         $result = array_column($result, $config->get('entities.' . $entity . '.id_column'));
+        dump($result);
         break;
     }
 
