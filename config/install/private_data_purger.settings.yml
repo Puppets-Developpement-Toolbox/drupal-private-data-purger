@@ -3,12 +3,33 @@ entities:
 #  newsletter_e_mail_entity:
 #    created: "1 year"
 #    entity_type: "classic_entity"
+#    entity_name: "newsletter_e_mail_entity"
   ##Batobus
-  #contact:
-  #  created: "1 year"
-  #  entity_type: "webform_submission"
+
+
+
+  contact:
+    created: "1 year"
+    entity_type: "webform_submission"
+    entity_name: "webform_submission"
+    db_field_name: "unused"
+    id_column: "unused"
+    db_type: "unused"
 
   galaxy_orders:
-    created: "1 year"
+    created: "1 year" 
     entity_type: "sql_entity"
+    entity_name: "galaxy_orders"
+    db_field_name: "timestamp"
+    db_field_type: "timestamp"
+    id_column: "id"
+
+
+  galaxy_commercial_order_status:
+    created: "6 months" 
+    entity_type: "sql_entity"
+    entity_name: "galaxy_commercial_order_status"
+    db_field_name: "last_updated"
+    db_field_type: "date"
+    id_column: "order_id"
     

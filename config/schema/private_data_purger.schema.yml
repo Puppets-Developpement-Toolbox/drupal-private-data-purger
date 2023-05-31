@@ -12,9 +12,18 @@ private_data_purger.settings:
             entity_type:
               type: string
               label: 'Entity Type'
-            created:
+            entity_name:
               type: string
-              label: 'Purge if older than (e.g. "1 year")'
+              label: 'Used to delete the entity name '
+            db_field_name:
+              type: string
+              label: 'the field name to delete'
+            db_field_type:
+              type: string
+              label: "wether it's timestamp or date"
+            id_column:
+              type: string
+              label: 'the field name to delete'
 
 
 
