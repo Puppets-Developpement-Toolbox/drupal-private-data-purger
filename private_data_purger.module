@@ -1,18 +1,10 @@
 <?php
 
-use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 
 /**
  * Implements hook_cron().
  */
 function private_data_purger_cron()
 {
-    $now = new DrupalDateTime();
-    $now->setTimezone(new \DateTimezone(DateTimeItemInterface::STORAGE_TIMEZONE));
-    $this_month =  $now->format('m');
-    if (\Drupal::state()->get('private_data_purger_cron.last_run', 0) !== $this_month) {
         \Drupal::service('private_data_purger.data_purger')->purgeData('wet-run');
-        \Drupal::state()->set('private_data_purger_cron.last_run', $this_month);
-    }
 }

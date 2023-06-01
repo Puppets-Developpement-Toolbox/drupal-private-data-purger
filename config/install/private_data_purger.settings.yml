@@ -11,11 +11,12 @@ data:
     record_type: "webform_submission"
     record_name: "webform_submission"
     field_name: "unused"
+    field_type: "unused"
     
 
   galaxy_orders:
     created: "1 year" 
-    record_type: "sql_records"
+    record_type: "sql_record"
     record_name: "galaxy_orders"
     field_name: "timestamp"
     field_type: "timestamp"

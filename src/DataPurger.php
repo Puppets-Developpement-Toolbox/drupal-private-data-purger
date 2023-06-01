@@ -17,48 +17,34 @@ class DataPurger
    * I came here to purge data and chew bubblegum... and I'm all out of bubblegum.
    */
 
-  public function purgeData($arg = "dry-run")
+  public function purgeData(string $arg = "dry-run")
   {
     $this->isDryrun($arg);
     $connection = \Drupal::service('database');
     $availableEntities = \Drupal::entityTypeManager()->getDefinitions();
     $config = \Drupal::config('private_data_purger.settings');
 
-    if (!empty($config->get()['data'])) {
-      foreach ($config->get()['data'] as $dataName => $dataConfig) {
-          //get out of loop   if entity does not exist
-          //check if $dataObject its type is a key of $availableEntities || entity is a table in the database
-        ;
-        if (!array_key_exists($dataName, $availableEntities) && !array_key_exists($dataConfig['entity_type'], $availableEntities) && !$connection->schema()->tableExists($dataConfig['entity_name'])) {
-          \Drupal::logger('private_data_purger')->error('Data ' . $dataName . ' of type ' . $dataConfig['entity_type'] . ' does not exist.');
-          break;
-        }
-
-        $this->handler($dataName, $dataConfig);
+    //try to get data from config file, if not throw an exception
+    if ($config->get('data') === null) {
+      throw new \Exception('No data to purge');
+    }
+    foreach ($config->get()['data'] as $dataName => $dataConfig) {
+      if (!array_key_exists($dataName, $availableEntities) && !array_key_exists($dataConfig['record_type'], $availableEntities) && !$connection->schema()->tableExists($dataConfig['record_name'])) {
+        throw new \Exception('Config record types not found in the database');
       }
+      $this->handler($dataName, $dataConfig);
     }
   }
-  /**
-   * Resolve the nids of the data object to be deleted
-   */
-  function handler($dataName, $dataConfig)
+  private function handler(string $dataName, array $dataConfig)
   {
     $created =  strtotime('- ' . $dataConfig['created']);
-    switch ($dataConfig['entity_type']) {
-      case 'webform_submission':
-        //$this->purgeWebformSubmission($dataName, $dataConfig, $created);
-        break;
-      case 'classic_entity':
-        $this->purgeClassicEntity($dataName, $dataConfig, $created);
-        break;
-      case 'sql_entity':
-        $this->purgeSqlData($dataName, $dataConfig, $created);
-        break;
-    }
+    //cast camel case string to camelCase
+    $record_type = lcfirst(str_replace('_', '', ucwords($dataConfig['record_type'], '_')));
+    $functionName = 'purge' . $record_type;
+    $functionName($dataName, $dataConfig, $created);
   }
 
-
-  public function purgeWebformSubmission($dataName, $dataConfig, $created)
+  public function purgeWebformSubmission(string $dataName, array $dataConfig, int $created)
   {
     $webform  = \Drupal\webform\Entity\Webform::load('contact');;
     if ($webform->hasSubmissions()) {
@@ -67,20 +53,20 @@ class DataPurger
         ->condition('webform_id', $dataName)
         ->accessCheck(FALSE)
         ->execute();
-      $this->deleteEntity($dataName, $dataConfig, $result);
+      $this->deleteEntities($dataConfig, $result);
     }
   }
 
-  public function purgeClassicEntity($dataName, $dataConfig, $created)
+  public function purgeClassicRecord(string $dataName, array $dataConfig, int $created)
   {
     $result = \Drupal::entityQuery($dataName)
       ->condition("created", $created, "<")
       ->accessCheck(FALSE)
       ->execute();
-    $this->deleteEntity($dataName, $dataConfig, $result);
+    $this->deleteEntities($dataConfig, $result);
   }
 
-  public function purgeSqlData($dataName, $dataConfig, $created)
+  public function purgeSqlRecord(string $dataName, array $dataConfig, string | int $created)
   {
     // declare a connection variable typed as database service
     /** @var use Drupal\Core\Database\Connection $connection */
@@ -95,7 +81,7 @@ class DataPurger
     }
     $count = 11;
     !$this->dry ?? $count = $query->execute();
-    \Drupal::logger('private_data_purger')->notice($count . ' records of ' . $dataConfig['entity_name'] . '  deleted. ');
+    \Drupal::logger('private_data_purger')->notice($count . ' records of ' . $dataConfig['record_name'] . '  deleted. ');
   }
 
   public function getConfig()
@@ -104,7 +90,8 @@ class DataPurger
     return $config;
   }
 
-  private function isDryrun($arg)
+
+  private function isDryrun(string $arg): void
   {
     if ($arg === "dry-run") {
       $this->dry = true;
@@ -114,11 +101,11 @@ class DataPurger
     }
   }
 
-  public function deleteEntity($dataName, $dataConfig, $ids)
+  public function deleteEntities(array $dataConfig, array $ids)
   {
-    \Drupal::logger('private_data_purger')->notice(count($ids) . ' records of ' . $dataConfig['entity_name'] . '  will be deleted. ');
+    \Drupal::logger('private_data_purger')->notice(count($ids) . ' records of ' . $dataConfig['record_name'] . '  will be deleted. ');
     foreach ($ids as $id) {
-      $storage_handler = \Drupal::entityTypeManager()->getStorage($dataConfig['entity_name']);
+      $storage_handler = \Drupal::entityTypeManager()->getStorage($dataConfig['record_name']);
       /** @var Drupal\node\Entity $node */
       $node = $storage_handler->load($id);
       // Drupal get node's creation date formatted to dd/mm/yyyy
