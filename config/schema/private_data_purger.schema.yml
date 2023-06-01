@@ -9,12 +9,12 @@ private_data_purger.settings:
           type: mapping
           label: 'Entity'
           mapping:
-            entity_type:
+            record_type:
               type: string
               label: 'Entity Type'
-            entity_name:
+            record_name:
               type: string
-              label: 'Used to delete the entity name '
+              label: 'Used to delete the record name '
             field_name:
               type: string
               label: 'the field name to delete'
