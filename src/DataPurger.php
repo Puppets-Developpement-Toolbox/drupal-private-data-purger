@@ -103,7 +103,8 @@ class DataPurger
     $config = \Drupal::config('private_data_purger.settings');
     return $config;
   }
-  public function isDryrun($arg)
+  
+  private function isDryrun($arg)
   {
     if ($arg === "dry-run") {
       $this->dry = true;
