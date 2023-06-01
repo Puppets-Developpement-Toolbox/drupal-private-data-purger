@@ -46,7 +46,7 @@ class DataPurger
     $created =  strtotime('- ' . $dataConfig['created']);
     switch ($dataConfig['entity_type']) {
       case 'webform_submission':
-        $this->purgeWebformSubmission($dataName, $dataConfig, $created);
+        //$this->purgeWebformSubmission($dataName, $dataConfig, $created);
         break;
       case 'classic_entity':
         $this->purgeClassicEntity($dataName, $dataConfig, $created);
@@ -93,8 +93,8 @@ class DataPurger
     } else {
       $query->condition($dataConfig['field_name'], date('Y-m-d', $created), '<');
     }
-    $count = 0;
-    $this->dry ?? $count = $query->execute();
+    $count = 11;
+    !$this->dry ?? $count = $query->execute();
     \Drupal::logger('private_data_purger')->notice($count . ' records of ' . $dataConfig['entity_name'] . '  deleted. ');
   }
 
@@ -103,7 +103,7 @@ class DataPurger
     $config = \Drupal::config('private_data_purger.settings');
     return $config;
   }
-  
+
   private function isDryrun($arg)
   {
     if ($arg === "dry-run") {
@@ -125,7 +125,7 @@ class DataPurger
       $date = \Drupal::service('date.formatter')->format($node->getCreatedTime(), 'custom', 'd/m/Y');
 
       //dump('Node of type ' . $dataName . ' with id ' . $id . ' created on ' . $date . ' will be deleted.');
-      $this->dry ?? $storage_handler->delete([$node]);
+      !$this->dry ?? $storage_handler->delete([$node]);
     }
   }
 }
