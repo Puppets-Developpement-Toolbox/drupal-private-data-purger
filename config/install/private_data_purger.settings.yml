@@ -1,0 +1,29 @@
+data:
+  #business logic or EAV value 
+  mywebform_type:
+    # delete the records created 1 year ago
+    created: "1 day"
+    #underlying  type : sql_records , webform_submission(EAV) , in this case these are webform
+    record_type: "webform_submission"
+    record_name: "webform_submission"
+    field_name: "unused"
+    field_type: "unused"
+
+    
+
+  my_business_sqldata_name:
+    created: "1 year" 
+    record_type: "sql_record"
+    #the name of the sql table 
+    record_name: "my_table"
+    #the name of the date field may be not be "created"
+    field_name: "timestamp"
+    field_type: "timestamp"
+
+  my_business_sqldata_name2:
+    created: "6 months" 
+    record_type: "sql_record"
+    record_name: "my_table"
+    field_name: "last_updated"
+    #in this instance, the field is last_ updated of type date the type of the date field may not be a timestamp 
+    field_type: "date"
