@@ -39,9 +39,11 @@ class DataPurger
   {
     $created =  strtotime('- ' . $dataConfig['created']);
     //cast camel case string to camelCase
-    $record_type = lcfirst(str_replace('_', '', ucwords($dataConfig['record_type'], '_')));
-    $functionName = 'purge' . $record_type;
-    $functionName($dataName, $dataConfig, $created);
+    $record_type = str_replace('_', '', ucwords($dataConfig['record_type'], '_'));
+    $functionName = 'purge' . ucfirst($record_type);
+    
+    $this->$functionName($dataName, $dataConfig, $created);
+    
   }
 
   public function purgeWebformSubmission(string $dataName, array $dataConfig, int $created)
@@ -53,6 +55,7 @@ class DataPurger
         ->condition('webform_id', $dataName)
         ->accessCheck(FALSE)
         ->execute();
+        dump($result , $dataName);
       $this->deleteEntities($dataConfig, $result);
     }
   }
@@ -79,7 +82,7 @@ class DataPurger
     } else {
       $query->condition($dataConfig['field_name'], date('Y-m-d', $created), '<');
     }
-    $count = 11;
+    $count = 0;
     !$this->dry ?? $count = $query->execute();
     \Drupal::logger('private_data_purger')->notice($count . ' records of ' . $dataConfig['record_name'] . '  deleted. ');
   }
