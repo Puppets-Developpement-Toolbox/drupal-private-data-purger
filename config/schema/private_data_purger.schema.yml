@@ -2,7 +2,7 @@ private_data_purger.settings:
   type: config_object
   label: 'Purge Settings'
   mapping:
-      entities: #a sequence of object with unknown keys
+      data: #a sequence of object with unknown keys
         type: sequence
         label: 'Entities'
         sequence:
@@ -15,15 +15,12 @@ private_data_purger.settings:
             entity_name:
               type: string
               label: 'Used to delete the entity name '
-            db_field_name:
+            field_name:
               type: string
               label: 'the field name to delete'
-            db_field_type:
+            field_type:
               type: string
               label: "wether it's timestamp or date"
-            id_column:
-              type: string
-              label: 'the field name to delete'
 
 
 

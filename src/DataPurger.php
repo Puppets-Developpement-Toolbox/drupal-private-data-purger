@@ -2,111 +2,129 @@
 
 namespace Drupal\private_data_purger;
 
+//import namespace of drupal logger
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+
 /**
  * DataPurger service.
  */
 class DataPurger
 {
+  //declare a private int property 
+  private $dry = true;
 
   /**
    * I came here to purge data and chew bubblegum... and I'm all out of bubblegum.
    */
 
-  public function purgeSomeEntity($arg)
+  public function purgeData($arg = "dry-run")
   {
+    $this->isDryrun($arg);
     $connection = \Drupal::service('database');
     $availableEntities = \Drupal::entityTypeManager()->getDefinitions();
     $config = \Drupal::config('private_data_purger.settings');
-    if (!empty($config->get()['entities'])) {
-      foreach ($config->get()['entities'] as $entity => $value) {
-        //get out of loop   if entity does not exist
-        //check if $entity its type is a key of $availableEntities || entity is a table in the database
 
-
-        $entity_type = $config->get('entities.' . $entity . '.entity_type');
-        $entity_name = $config->get('entities.' . $entity . '.entity_name');
-        if (!array_key_exists($entity, $availableEntities) && !array_key_exists($entity_type, $availableEntities) && !$connection->schema()->tableExists($entity_name)) {
-          echo ('Entity ' . $entity . ' of type ' . $entity_type . ' does not exist.');
+    if (!empty($config->get()['data'])) {
+      foreach ($config->get()['data'] as $dataName => $dataConfig) {
+          //get out of loop   if entity does not exist
+          //check if $dataObject its type is a key of $availableEntities || entity is a table in the database
+        ;
+        if (!array_key_exists($dataName, $availableEntities) && !array_key_exists($dataConfig['entity_type'], $availableEntities) && !$connection->schema()->tableExists($dataConfig['entity_name'])) {
+          \Drupal::logger('private_data_purger')->error('Data ' . $dataName . ' of type ' . $dataConfig['entity_type'] . ' does not exist.');
           break;
         }
-        // use the resolveNids function to get the nids of the entities to be deleted
-        $nids = $this->resolveNids($entity, $entity_type);
 
-
-        dump(count($nids) . ' records of ' . $entity . '  will be deleted. ');
-        if ($arg === "wet-run") {
-          foreach ($nids as $nid) {
-            if (!$entity_type === 'sql_entity') {
-              $storage_handler = \Drupal::entityTypeManager()->getStorage($entity_name);
-              /** @var Drupal\node\Entity $node */
-              $node = $storage_handler->load($nid);
-              // Drupal get node's creation date formatted to dd/mm/yyyy
-              $date = \Drupal::service('date.formatter')->format($node->getCreatedTime(), 'custom', 'd/m/Y');
-              dump('Node of type ' . $entity . ' with id ' . $nid . ' created on ' . $date . ' will be deleted.');
-              //$storage_handler->delete([$node]);
-            } else {
-              $connection->delete($entity_name)
-                ->condition('id', $nid);
-              //->execute();
-              dump('Node  ' . $nid . ' from ' . $entity_name . ' deleted.');
-            }
-          }
-        }
+        $this->handler($dataName, $dataConfig);
       }
     }
   }
-
   /**
-   * Resolve the nids of the entities to be deleted
+   * Resolve the nids of the data object to be deleted
    */
-  function resolveNids($entity, $entity_type)
+  function handler($dataName, $dataConfig)
   {
-    $config = \Drupal::config('private_data_purger.settings');
-    $ageToKeep =  strtotime('- ' . $config->get('entities.' . $entity . '.created'));
-
-    switch ($entity_type) {
+    $created =  strtotime('- ' . $dataConfig['created']);
+    switch ($dataConfig['entity_type']) {
       case 'webform_submission':
-        $webform  = \Drupal\webform\Entity\Webform::load('contact');;
-        if ($webform->hasSubmissions()) {
-          $result = \Drupal::entityQuery('webform_submission')
-            ->condition("created", $ageToKeep, "<")
-            ->condition('webform_id', $entity)
-            ->accessCheck(FALSE)
-            ->execute();
-        }
+        $this->purgeWebformSubmission($dataName, $dataConfig, $created);
         break;
       case 'classic_entity':
-        $result = \Drupal::entityQuery($entity)
-          ->condition("created", $ageToKeep, "<")
-          ->accessCheck(FALSE)
-          ->execute();
+        $this->purgeClassicEntity($dataName, $dataConfig, $created);
         break;
       case 'sql_entity':
-        // declare a connection variable typed as database service
-        /** @var use Drupal\Core\Database\Connection $node */
-        $connection = \Drupal::service('database');
-        //drupal check if table exists
-
-        $query = $connection->select($config->get('entities.' . $entity . '.entity_name'), 'go')
-          ->fields(
-            'go',
-            [$config->get('entities.' . $entity . '.id_column')]
-          );
-
-        if ($config->get('entities.' . $entity . '.db_field_type') == "timestamp") {
-
-          $query->condition($config->get('entities.' . $entity . '.db_field_name'), $ageToKeep, "<");
-        } else {
-          $query->condition($config->get('entities.' . $entity . '.db_field_name'), date('Y-m-d', $ageToKeep), '<');
-        }
-        $result = $query->execute()->fetchAll();
-
-        // array from id key of $query
-        $result = array_column($result, $config->get('entities.' . $entity . '.id_column'));
-        dump($result);
+        $this->purgeSqlData($dataName, $dataConfig, $created);
         break;
     }
+  }
 
-    return $result;
+
+  public function purgeWebformSubmission($dataName, $dataConfig, $created)
+  {
+    $webform  = \Drupal\webform\Entity\Webform::load('contact');;
+    if ($webform->hasSubmissions()) {
+      $result = \Drupal::entityQuery('webform_submission')
+        ->condition("created", $created, "<")
+        ->condition('webform_id', $dataName)
+        ->accessCheck(FALSE)
+        ->execute();
+      $this->deleteEntity($dataName, $dataConfig, $result);
+    }
+  }
+
+  public function purgeClassicEntity($dataName, $dataConfig, $created)
+  {
+    $result = \Drupal::entityQuery($dataName)
+      ->condition("created", $created, "<")
+      ->accessCheck(FALSE)
+      ->execute();
+    $this->deleteEntity($dataName, $dataConfig, $result);
+  }
+
+  public function purgeSqlData($dataName, $dataConfig, $created)
+  {
+    // declare a connection variable typed as database service
+    /** @var use Drupal\Core\Database\Connection $connection */
+    $connection = \Drupal::service('database');
+    //drupal check if table exists
+    $query = $connection->delete($dataName);
+
+    if ($dataConfig['field_type'] === "timestamp") {
+      $query->condition($dataConfig['field_name'], $created, "<");
+    } else {
+      $query->condition($dataConfig['field_name'], date('Y-m-d', $created), '<');
+    }
+    $count = 0;
+    $this->dry ?? $count = $query->execute();
+    \Drupal::logger('private_data_purger')->notice($count . ' records of ' . $dataConfig['entity_name'] . '  deleted. ');
+  }
+
+  public function getConfig()
+  {
+    $config = \Drupal::config('private_data_purger.settings');
+    return $config;
+  }
+  public function isDryrun($arg)
+  {
+    if ($arg === "dry-run") {
+      $this->dry = true;
+    }
+    if ($arg === "wet-run") {
+      $this->dry = false;
+    }
+  }
+
+  public function deleteEntity($dataName, $dataConfig, $ids)
+  {
+    \Drupal::logger('private_data_purger')->notice(count($ids) . ' records of ' . $dataConfig['entity_name'] . '  will be deleted. ');
+    foreach ($ids as $id) {
+      $storage_handler = \Drupal::entityTypeManager()->getStorage($dataConfig['entity_name']);
+      /** @var Drupal\node\Entity $node */
+      $node = $storage_handler->load($id);
+      // Drupal get node's creation date formatted to dd/mm/yyyy
+      $date = \Drupal::service('date.formatter')->format($node->getCreatedTime(), 'custom', 'd/m/Y');
+
+      //dump('Node of type ' . $dataName . ' with id ' . $id . ' created on ' . $date . ' will be deleted.');
+      $this->dry ?? $storage_handler->delete([$node]);
+    }
   }
 }
