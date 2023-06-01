@@ -19,7 +19,7 @@ class DataPurger
 
   public function purgeData(string $arg = "dry-run")
   {
-    $this->isDryrun($arg);
+    $this->isDryRun($arg);
     $connection = \Drupal::service('database');
     $availableEntities = \Drupal::entityTypeManager()->getDefinitions();
     $config = \Drupal::config('private_data_purger.settings');
@@ -94,7 +94,7 @@ class DataPurger
   }
 
 
-  private function isDryrun(string $arg): void
+  private function isDryRun(string $arg): void
   {
     if ($arg === "dry-run") {
       $this->dry = true;
