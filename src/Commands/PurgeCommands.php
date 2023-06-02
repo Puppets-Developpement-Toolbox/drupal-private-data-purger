@@ -16,6 +16,6 @@ class PurgeCommands extends DrushCommands
    */
   public function callDataPurge($arg = "")
   {
-    $this->dataPurger->purgeData($arg);
+    $this->dataPurger->purgeData($arg === 'dry-run');
   }
 }
