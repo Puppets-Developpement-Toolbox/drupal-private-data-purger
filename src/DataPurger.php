@@ -71,6 +71,18 @@ class DataPurger
     if (!$connection->schema()->tableExists($dataConfig['record_name'])) {
       throw new \Exception('Config record type' . $dataConfig['record_name'] . ' : ' . $dataConfig['record_type'] . ' not found in the database');
     }
+
+
+    $query = $connection->select($dataConfig['record_name'])
+      ->fields($dataConfig['record_name'], [$dataConfig['field_name']]);
+    if ($dataConfig['field_type'] === "timestamp") {
+      $query->condition($dataConfig['field_name'], $ttl, "<");
+    } else {
+      $query->condition($dataConfig['field_name'], date('Y-m-d', $ttl), '<');
+    }
+
+    $count = count($query->execute()->fetchAll());
+
     //drupal check if table exists
     $query = $connection->delete($dataConfig['record_name']);
     if ($dataConfig['field_type'] === "timestamp") {
@@ -78,11 +90,13 @@ class DataPurger
     } else {
       $query->condition($dataConfig['field_name'], date('Y-m-d', $ttl), '<');
     }
-    $count = 0;
+
+    \Drupal::logger('private_data_purger')->notice($count . ' records of ' . $dataConfig['record_name'] . ' : ' . $dataConfig['record_type'] . '  up for deletion. ');
+    
     if (!$this->dry) {
       $count =   $query->execute();
+      \Drupal::logger('private_data_purger')->notice($count . ' records of ' . $dataConfig['record_name'] . ' : ' . $dataConfig['record_type'] . '  deleted. ');
     }
-    \Drupal::logger('private_data_purger')->notice($count . ' records of ' . $dataConfig['record_name'] .' : '.$dataConfig['record_type']. '  deleted. ');
   }
 
   public function getConfig()
@@ -93,7 +107,7 @@ class DataPurger
 
   public function deleteEntities(array $dataConfig, array $ids)
   {
-    \Drupal::logger('private_data_purger')->notice(count($ids) . ' records of ' . $dataConfig['record_name'] .' : '.$dataConfig['record_type']. '  will be deleted. ');
+    \Drupal::logger('private_data_purger')->notice(count($ids) . ' records of ' . $dataConfig['record_name'] . ' : ' . $dataConfig['record_type'] . ' up for deletion. ');
     foreach ($ids as $id) {
       $storage_handler = \Drupal::entityTypeManager()->getStorage($dataConfig['record_type']);
       /** @var Drupal\node\Entity $node */
