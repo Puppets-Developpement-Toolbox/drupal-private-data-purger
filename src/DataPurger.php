@@ -82,7 +82,7 @@ class DataPurger
     if (!$this->dry) {
       $count =   $query->execute();
     }
-    \Drupal::logger('private_data_purger')->notice($count . ' records of ' . $dataConfig['record_name'] . '  deleted. ');
+    \Drupal::logger('private_data_purger')->notice($count . ' records of ' . $dataConfig['record_name'] .' : '.$dataConfig['record_type']. '  deleted. ');
   }
 
   public function getConfig()
@@ -93,7 +93,7 @@ class DataPurger
 
   public function deleteEntities(array $dataConfig, array $ids)
   {
-    \Drupal::logger('private_data_purger')->notice(count($ids) . ' records of ' . $dataConfig['record_name'] . '  will be deleted. ');
+    \Drupal::logger('private_data_purger')->notice(count($ids) . ' records of ' . $dataConfig['record_name'] .' : '.$dataConfig['record_type']. '  will be deleted. ');
     foreach ($ids as $id) {
       $storage_handler = \Drupal::entityTypeManager()->getStorage($dataConfig['record_type']);
       /** @var Drupal\node\Entity $node */
