@@ -1,5 +1,4 @@
 data:
-  #business logic or EAV value 
   #-
     # delete the records ttl 1 year ago
     ttl: "1 day"
