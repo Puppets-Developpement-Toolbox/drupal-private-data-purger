@@ -14,7 +14,7 @@ class PurgeCommands extends DrushCommands
    *
    * @command private_data_purger:simple
    */
-  public function callDataPurge($arg = "false")
+  public function callDataPurge($arg = "")
   {
     $this->dataPurger->purgeData($arg);
   }

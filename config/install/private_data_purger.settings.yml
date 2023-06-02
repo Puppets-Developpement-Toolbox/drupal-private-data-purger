@@ -13,15 +13,15 @@ data:
     ttl: "1 month" 
     record_type: "sql_record"
     #the name of the sql table 
-    record_name: galaxy_orders
+    record_name: mysql_table_name
     #the name of the date field may be not be "ttl"
-    field_name: "timestamp"
+    field_name: mysql_column_name
     field_type: "timestamp"
 
   -
     ttl: "1 month" 
     record_type: "sql_record"
-    record_name: galaxy_commercial_order_status
+    record_name: mysql_table_name
     field_name: "last_updated"
-    #in this instance, the field is last_ updated of type date the type of the date field may not be a timestamp 
-    field_type: "date"
+    #in this instance, the field is last_updated of type some_date_format 
+    field_type: "some_date_format"

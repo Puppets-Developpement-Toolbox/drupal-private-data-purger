@@ -17,13 +17,12 @@ class DataPurger
    * I came here to purge data and chew bubblegum... and I'm all out of bubblegum.
    */
 
-  public function purgeData(string $arg = "dry-run")
+  public function purgeData(string $arg = "")
   {
     if ($arg == "dry-run") {
       $this->dry = true;
     }
     $connection = \Drupal::service('database');
-    $availableEntities = \Drupal::entityTypeManager()->getDefinitions();
     $config = \Drupal::config('private_data_purger.settings');
 
     //try to get data from config file, if not throw an exception
@@ -31,9 +30,6 @@ class DataPurger
       throw new \Exception('No data to purge');
     }
     foreach ($config->get()['data'] as $records => $dataConfig) {
-      if (!array_key_exists($dataConfig['record_name'], $availableEntities) && !array_key_exists($dataConfig['record_type'], $availableEntities) && !$connection->schema()->tableExists($dataConfig['record_name'])) {
-        throw new \Exception('Config record type' . $dataConfig['record_name'] . ' : ' . $dataConfig['record_type'] . ' not found in the database');
-      }
       $this->handler($dataConfig['record_name'], $dataConfig);
     }
   }
@@ -43,24 +39,22 @@ class DataPurger
     //cast snake_case string to camelCase
     $record_type = str_replace('_', '', ucwords($dataConfig['record_type'], '_'));
     $functionName = 'purge' . ucfirst($record_type);
-
-    $this->$functionName($dataName, $dataConfig, $ttl);
+    $availableEntities = \Drupal::entityTypeManager()->getDefinitions();
+    $this->$functionName($dataName, $dataConfig, $ttl, $availableEntities);
   }
 
-  public function purgeWebformSubmission(string $dataName, array $dataConfig, int $ttl)
+  public function purgeWebformSubmission(string $dataName, array $dataConfig, int $ttl, $availableEntities = [])
   {
-    $webform  = \Drupal\webform\Entity\Webform::load($dataConfig['record_name']);;
-    if ($webform->hasSubmissions()) {
-      $result = \Drupal::entityQuery('webform_submission')
-        ->condition("created", $ttl, "<")
-        ->condition('webform_id', $dataName)
-        ->accessCheck(FALSE)
-        ->execute();
-      $this->deleteEntities($dataConfig, $result);
-    }
+    $this->checkEntityValidity($dataConfig, $availableEntities);
+    $result = \Drupal::entityQuery('webform_submission')
+      ->condition("created", $ttl, "<")
+      ->condition('webform_id', $dataName)
+      ->accessCheck(FALSE)
+      ->execute();
+    $this->deleteEntities($dataConfig, $result);
   }
 
-  public function purgeClassicRecord(string $dataName, array $dataConfig, int $ttl)
+  public function purgeClassicRecord(string $dataName, array $dataConfig, int $ttl, $availableEntities = [])
   {
     $result = \Drupal::entityQuery($dataName)
       ->condition("created", $ttl, "<")
@@ -69,11 +63,14 @@ class DataPurger
     $this->deleteEntities($dataConfig, $result);
   }
 
-  public function purgeSqlRecord(string $dataName, array $dataConfig, string | int $ttl)
+  public function purgeSqlRecord(string $dataName, array $dataConfig, string | int $ttl, $availableEntities = [])
   {
     // declare a connection variable typed as database service
     /** @var use Drupal\Core\Database\Connection $connection */
     $connection = \Drupal::service('database');
+    if (!$connection->schema()->tableExists($dataConfig['record_name'])) {
+      throw new \Exception('Config record type' . $dataConfig['record_name'] . ' : ' . $dataConfig['record_type'] . ' not found in the database');
+    }
     //drupal check if table exists
     $query = $connection->delete($dataConfig['record_name']);
     if ($dataConfig['field_type'] === "timestamp") {
@@ -94,8 +91,6 @@ class DataPurger
     return $config;
   }
 
-
-
   public function deleteEntities(array $dataConfig, array $ids)
   {
     \Drupal::logger('private_data_purger')->notice(count($ids) . ' records of ' . $dataConfig['record_name'] . '  will be deleted. ');
@@ -105,8 +100,16 @@ class DataPurger
       $node = $storage_handler->load($id);
       // Drupal get node's creation date formatted to dd/mm/yyyy
       $date = \Drupal::service('date.formatter')->format($node->getCreatedTime(), 'custom', 'd/m/Y');
+      if (!$this->dry) {
+        $count =  $storage_handler->delete([$node]);
+      }
+    }
+  }
 
-      !$this->dry ?? $storage_handler->delete([$node]);
+  private function checkEntityValidity($dataConfig, $availableEntities)
+  {
+    if (!array_key_exists($dataConfig['record_name'], $availableEntities) && !array_key_exists($dataConfig['record_type'], $availableEntities)) {
+      throw new \Exception('Entity type' . $dataConfig['record_name'] . ' : ' . $dataConfig['record_type'] . ' not found in the database');
     }
   }
 }
