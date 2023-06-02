@@ -108,12 +108,13 @@ class DataPurger
 
   public function deleteEntities($storage_name, array $ids)
   {
-    if (!$this->dry) return;
-    $storage_handler = \Drupal::entityTypeManager()   ->getStorage($storage_name);
+    if ($this->dry === true) return;
+    $storage_handler = \Drupal::entityTypeManager()->getStorage($storage_name);
     $chunks = array_chunk($ids, 100);
     foreach($chunks as $ids_chunk) {
       $to_delete = $storage_handler->loadMultiple($ids_chunk);
       $storage_handler->delete($to_delete);
+      
     }
   }
 
