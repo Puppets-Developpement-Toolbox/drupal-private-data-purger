@@ -6,5 +6,5 @@
  */
 function private_data_purger_cron()
 {
-    //    \Drupal::service('private_data_purger.data_purger')->purgeData();
+    \Drupal::service('private_data_purger.data_purger')->purgeData();
 }
