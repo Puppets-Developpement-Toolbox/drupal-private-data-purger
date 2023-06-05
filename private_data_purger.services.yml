@@ -1,0 +1,8 @@
+services:
+  private_data_purger.data_purger:
+    class: Drupal\private_data_purger\DataPurger
+  private_data_purger.commands:
+    class: \Drupal\private_data_purger\Commands\PurgeCommands
+    tags:
+      - { name: drush.command }
+    arguments : ['@private_data_purger.data_purger']

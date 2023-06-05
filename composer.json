@@ -1,0 +1,19 @@
+{
+    "name": "drupal/private_data_purger",
+    "description": "Will purge data according to a simple conf",
+    "type": "drupal-module",
+    "package": "GDPR",
+    "license": "private",
+    "autoload": {
+        "psr-4": {
+            "Drupal\\PrivateDataPurger\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "MarelPup",
+            "email": "marwane.elaouni@puppetsbox.com"
+        }
+    ],
+    "require": {}
+}

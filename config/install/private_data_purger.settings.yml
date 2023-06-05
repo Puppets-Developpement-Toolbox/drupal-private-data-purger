@@ -1,0 +1,25 @@
+data:
+
+  # EXEMPLE OF WEBFORM SUBMISSION
+  -
+    # delete the records ttl 1 year ago
+    ttl: "1 day"
+    ##underlying  type : sql_records , webform_submission(EAV) , in this case these are webform
+    record_type: "webform_submission"
+    record_name: "contact"
+
+  # EXEMPLE OF classic entity
+  -
+    ttl: 1 month 
+    record_type: entity
+    record_name: entity_name
+
+  # EXEMPLE OF raw sql table
+  -
+    ttl: "1 month" 
+    record_type: "sql_record"
+    #the name of the sql table 
+    record_name: mysql_table_name
+    #the name of the date field may be not be "ttl"
+    field_name: mysql_column_name
+    field_type: "timestamp"

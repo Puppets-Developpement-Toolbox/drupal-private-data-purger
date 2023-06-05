@@ -1,0 +1,6 @@
+name: 'Drupal Private data Cleanup '
+description: 'Provides private data cleaning'
+type: module
+package: GDPR
+core_version_requirement: ^8.8.0 || ^9.0 || ^10.0
+package: 'Custom'
