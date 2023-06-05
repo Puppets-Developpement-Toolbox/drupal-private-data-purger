@@ -1,4 +1,4 @@
-# drupal-private-data-purger
+# drupal_private_data_purger
 **GPDR** friendly module that purges the private data records in your database 
 
 
