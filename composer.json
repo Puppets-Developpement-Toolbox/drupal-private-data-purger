@@ -6,7 +6,7 @@
     "license": "private",
     "autoload": {
         "psr-4": {
-            "Drupal\\PrivateDataPurger\\": "src/"
+            "Drupal\\private_data_purger\\": "src/"
         }
     },
     "authors": [
